@@ -4,9 +4,10 @@ smartdel
 This bash script should be placed in user's bin folder for global execution. <br>
 Additionally, a 'smardel_recycle' directory should be placed at the users home folder as the recycle bin. <br>
 
-Options: -d (delete)
-         -r (restore)
-            (option omitted, behavior is identical to -r)
+Options: <br> 
+-d (delete) <br>
+-r (restore) <br>
+(option omitted, behavior is identical to -r) <br>
 
 Examples of smartdel execution include:
 
