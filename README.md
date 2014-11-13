@@ -11,7 +11,7 @@ Options: -d (delete)
 Examples of smartdel execution include:
 
 # move file(s) to recycle bin, supports wildcards
-smartdel -d filename
+smartdel -d filename <br>
 smartdel filename
 smartdel -d file*
 smartdel file*
