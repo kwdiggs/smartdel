@@ -2,7 +2,7 @@ smartdel
 ========
 
 This bash script should be placed in user's bin folder for global execution. <br>
-Additionally, a 'smardel_recycle' directory should be placed at the users home folder as the recycle bin. <br>
+Additionally, a 'smartdel_recycle' directory should be placed at the users home folder as the recycle bin. <br>
 
 <Options: <br> 
 -d (delete) <br>
