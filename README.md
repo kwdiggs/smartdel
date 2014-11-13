@@ -2,6 +2,7 @@ smartdel
 ========
 
 *Created for COMP 4262-001 at the University of Memphis*
+*Project by Dr. Zhuo Lu*
 
 This bash script should be placed in user's bin folder for global execution. <br>
 
