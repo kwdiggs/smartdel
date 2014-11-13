@@ -13,8 +13,8 @@ This bash script should be placed in user's bin folder for global execution. <br
 <h2>move file(s) to recycle bin, supports wildcards</h2> 
 smartdel -d filename <br>
 smartdel filename <br>
-smartdel -d file* <br>
-smartdel file* <br>
+smartdel -d filena* <br>
+smartdel filena* <br>
 smartdel file???? <br>
 
 <h2>restore file(s) to the current directory</h2> 
