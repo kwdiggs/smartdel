@@ -11,7 +11,7 @@ Additionally, a 'smardel_recycle' directory should be placed at the users home f
 
 Examples of smartdel execution include: 
 
-<h2>move file(s) to recycle bin, supports wildcards</h2> <br>
+<h2>move file(s) to recycle bin, supports wildcards</h2> 
 smartdel -d filename <br>
 smartdel filename <br>
 smartdel -d file* <br>
