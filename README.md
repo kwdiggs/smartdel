@@ -12,13 +12,13 @@ Examples of smartdel execution include:
 
 # move file(s) to recycle bin, supports wildcards
 smartdel -d filename <br>
-smartdel filename
-smartdel -d file*
-smartdel file*
-smartdel file????
+smartdel filename <br>
+smartdel -d file* <br>
+smartdel file* <br>
+smartdel file???? <br>
 
 # restore file(s) to the current dictory, wilcards must be string literal 
-smartdel -r filename
-smartdel -r 'file*'
+smartdel -r filename <br>
+smartdel -r 'file*' <br>
 
 
