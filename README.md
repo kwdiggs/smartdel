@@ -18,7 +18,7 @@ smartdel -d file* <br>
 smartdel file* <br>
 smartdel file???? <br>
 
-<h2>restore file(s) to the current dictory, wilcards must be string literal</h2> 
+<h2>restore file(s) to the current directory</h2> 
 smartdel -r filename <br>
 smartdel -r 'file*' <br>
 
