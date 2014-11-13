@@ -1,7 +1,7 @@
 smartdel
 ========
 
-**Created for COMP 4262-001 at the University of Memphis**
+*Created for COMP 4262-001 at the University of Memphis*
 
 This bash script should be placed in user's bin folder for global execution. <br>
 Additionally, a 'smartdel_recycle' directory should be placed at the users home folder as the recycle bin. <br>
