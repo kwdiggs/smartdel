@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# DRY function to move files to our recycle bin
+delete () {
+	mv $1 ~/smartdel_recycle
+}
+
+# paramaterize the option, if it exists. Else, this loop will be skipped
+while getopts ":d:r:" opt;
+do
+	# in the case of globbing, shift all filenames down to $2
+	while [ -n "$2" ]
+	do
+		case $opt in
+               		d) delete $2 ;;
+               		r) mv ~/smartdel_recycle/$2 . ;;
+               		\?) echo "invalid command: -$OPTARG" ;;
+       		esac
+		shift # shift down command vars by 1
+	done
+	exit # exit if getops found an option
+done
+
+# if there is no specified option, delete by default
+while [ -n "$1" ]
+do
+	delete $1
+	shift
+done
+
+
+
+
+
+
