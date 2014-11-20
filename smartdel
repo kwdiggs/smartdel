@@ -10,20 +10,62 @@ then
 	cd $dir
 fi
 
-# DRY function to move files to our recycle bin
+# DRY functions to move files to and from our recycle bin
 delete () {
-	mv $1 ~/smartdel_recycle
+
+	# variables for concatenation
+	filename=$1
+	var='d' # d for deleted
+
+	# append char to ensure uniqueness
+	if [ -e ~/smartdel_recycle/$filename ]
+	then
+		while [ -e ~/smartdel_recycle/$filename ]
+		do
+			filename=$filename$var
+		done
+
+		echo "smartdel: this file already exists, but not to worry, moved with new name '$filename'"
+		mv $1 $filename
+	fi
+
+	# move file
+ 	echo "$filename $PWD" >> ~/smartdel_recycle/.table.txt
+        mv $filename ~/smartdel_recycle
+}
+
+restore () {
+
+	# variables for concatenation
+        filename=$1
+        var='r' # r for restored
+
+        # append char to ensure uniqueness
+        if [ -e ./$filename ]
+        then
+                while [ -e ./$filename ]
+                do
+                        filename=$filename$var
+                done
+
+                echo "smartdel: this file already exists, but not to worry, moved with new name '$filename'"
+                mv ~/smartdel_recycle/$1 ~/smartdel_recycle/$filename
+        fi
+
+        # move file
+	mv ~/smartdel_recycle/$filename .
 }
 
 # paramaterize the option, if it exists. Else, this loop will be skipped
-while getopts ":d:r:" opt;
+while getopts ":d:r:o:" opt;
 do
-	# in the case of globbing, shift all filenames down to $2
+	# in the case of wildcards, shift all filenames down to $2
 	while [ -n "$2" ]
 	do
 		case $opt in
                		d) delete $2 ;;
-               		r) mv ~/smartdel_recycle/$2 . ;;
+               		r) restore $2 ;;
+			o) restore $2 ;;
                		\?) echo "invalid command: -$OPTARG" ;;
        		esac
 		shift # shift down command vars by 1
