@@ -10,6 +10,17 @@ then
 	cd $dir
 fi
 
+log () {
+	tuple="$1 $PWD"
+	if grep -Fxq "$tuple" ~/$recbin/$tuple
+	then
+    		echo "okay!"
+	else
+    		echo "too late!"
+		echo "$tuple" >> ~/$recbin/.table.txt
+	fi
+}
+
 # DRY functions to move files to and from our recycle bin
 delete () {
 
@@ -18,9 +29,9 @@ delete () {
 	var='d' # d for deleted
 
 	# append char to ensure uniqueness
-	if [ -e ~/smartdel_recycle/$filename ]
+	if [ -e ~/$recbin/$filename ]
 	then
-		while [ -e ~/smartdel_recycle/$filename ]
+		while [ -e ~/$recbin/$filename ]
 		do
 			filename=$filename$var
 		done
@@ -30,8 +41,8 @@ delete () {
 	fi
 
 	# move file
- 	echo "$filename $PWD" >> ~/smartdel_recycle/.table.txt
-        mv $filename ~/smartdel_recycle
+       	log $filename
+	mv $filename ~/$recbin/
 }
 
 restore () {
@@ -49,11 +60,11 @@ restore () {
                 done
 
                 echo "smartdel: this file already exists, but not to worry, moved with new name '$filename'"
-                mv ~/smartdel_recycle/$1 ~/smartdel_recycle/$filename
+                mv ~/$recbin/$1 ~/$recbin/$filename
         fi
 
         # move file
-	mv ~/smartdel_recycle/$filename .
+	mv ~/$rebin/$filename .
 }
 
 # paramaterize the option, if it exists. Else, this loop will be skipped
