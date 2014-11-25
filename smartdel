@@ -25,17 +25,22 @@ fi
 # DRY functions to move files to and from our recycle bin
 delete () {
 	# variables for concatenation
-	filename=$1
-	one='_1'
-	filename_one=$filename$one
-	under="_"
+	filename=$1					# filename to be manipulated if duplicate is detected
+	one='_1'					# to be appended if file is duplicate for the first time
+	filename_one=$filename$one			# concatenated first duplication
+	under="_"					# underscore
 
-
-	num="${filename##*_}"
-	# append _1 to ensure uniqueness
-	expression='^[0-9]+$'
-	if ! [[ $num =~ $expression ]]
+	# if file is not of the correct format, append _1 to ensure uniqueness
+	if [[ "$filename" =~ "$under" ]]  		# if filename contain underscore
 	then
+		echo "huzzah"
+		num="${filename##*_}"
+		expression='^[0-9]+$'
+		if ! [[ $num =~ $expression ]]		# if integer follows underscore, formatting is correct
+		then
+			filename=$filename_one
+		fi
+	else
 		filename=$filename_one
 	fi
 	# or increment suffix to append
@@ -54,16 +59,17 @@ delete () {
 	fi
 
 	# move file
-       #	log $filename
+        log $filename
 	mv $1 ~/$recbin/$filename
 }
 
 restore () {
-
 	# variables for concatenation
         filename=$1
-        var='r' # r for restored
-
+	path="~/$recbin/$filename*
+	ast='*'
+	files=($path)
+	echo "${files[0]}"
         # append char to ensure uniqueness
         if [ -e ./$filename ]
         then
@@ -80,6 +86,10 @@ restore () {
 	mv ~/$rebin/$filename .
 }
 
+o_restore () {
+	
+}
+
 # paramaterize the option, if it exists. Else, this loop will be skipped
 while getopts ":d:r:o:" opt;
 do
@@ -89,7 +99,7 @@ do
 		case $opt in
                		d) delete $2 ;;
                		r) restore $2 ;;
-			o) restore $2 ;;
+			o) o_restore $2 ;;
                		\?) echo "invalid command: -$OPTARG" ;;
        		esac
 		shift # shift down command vars by 1
