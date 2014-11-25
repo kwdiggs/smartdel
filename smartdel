@@ -10,39 +10,52 @@ then
 	cd $dir
 fi
 
-log () {
-	tuple="$1 $PWD"
-	if grep -Fxq "$tuple" ~/$recbin/$tuple
-	then
-    		echo "okay!"
-	else
-    		echo "too late!"
-		echo "$tuple" >> ~/$recbin/.table.txt
-	fi
-}
+# log the tuple in the recycle bin table
+#log () {
+#	tuple="$1 $PWD"
+#	if grep -Fxq "$tuple" ~/$recbin/.table.txt
+#	then
+#   		echo "okay!"
+#	else
+#    		echo "too late!"
+#		echo "$tuple" >> ~/$recbin/.table.txt
+#	fi
+#}
 
 # DRY functions to move files to and from our recycle bin
 delete () {
-
 	# variables for concatenation
 	filename=$1
-	var='d' # d for deleted
+	one='_1'
+	filename_one=$filename$one
+	under="_"
 
-	# append char to ensure uniqueness
+
+	num="${filename##*_}"
+	# append _1 to ensure uniqueness
+	expression='^[0-9]+$'
+	if ! [[ $num =~ $expression ]]
+	then
+		filename=$filename_one
+	fi
+	# or increment suffix to append
 	if [ -e ~/$recbin/$filename ]
 	then
 		while [ -e ~/$recbin/$filename ]
 		do
-			filename=$filename$var
+			num="${filename##*_}" 		# get num
+			num=`expr $num + 1`		# increment num
+			num=$under$num			# prepend underscore
+			filename="${filename%_*}"	# remove old suffix
+			filename=$filename$num		# add new suffix
 		done
 
-		echo "smartdel: this file already exists, but not to worry, moved with new name '$filename'"
-		mv $1 $filename
+		echo "smartdel: this file already exists, moved as '$filename'"
 	fi
 
 	# move file
-       	log $filename
-	mv $filename ~/$recbin/
+       #	log $filename
+	mv $1 ~/$recbin/$filename
 }
 
 restore () {
