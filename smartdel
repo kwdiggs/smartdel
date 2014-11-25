@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# create recycle bin if not already created
+# create recycle bin
 recbin='smartdel_recycle'
+table='.table.txt'
 if [ ! -d ~/$recbin ]
 then
 	dir=$PWD
@@ -10,17 +11,23 @@ then
 	cd $dir
 fi
 
+# create table
+if [ ! -e ~/$recbin/$table ]
+then
+	dir=$PWD
+	cd ~/$recbin
+	echo > $table
+	cd $dir
+fi
+
 # log the tuple in the recycle bin table
-#log () {
-#	tuple="$1 $PWD"
-#	if grep -Fxq "$tuple" ~/$recbin/.table.txt
-#	then
-#   		echo "okay!"
-#	else
-#    		echo "too late!"
-#		echo "$tuple" >> ~/$recbin/.table.txt
-#	fi
-#}
+log () {
+	tuple="$1 $PWD"
+	if ! grep -Fxq "$tuple" ~/$recbin/$table
+	then
+		echo "$tuple" >> ~/$recbin/$table
+	fi
+}
 
 # DRY functions to move files to and from our recycle bin
 delete () {
@@ -30,23 +37,23 @@ delete () {
 	filename_one=$filename$one			# concatenated first duplication
 	under="_"					# underscore
 
-	# if file is not of the correct format, append _1 to ensure uniqueness
+	# append _1 to ensure uniqueness
 	if [[ "$filename" =~ "$under" ]]  		# if filename contain underscore
 	then
-		echo "huzzah"
-		num="${filename##*_}"
-		expression='^[0-9]+$'
+		num="${filename##*_}"			# get number after final underscore
+		expression='^[0-9]+$'			# regex expression detecting integers
 		if ! [[ $num =~ $expression ]]		# if integer follows underscore, formatting is correct
 		then
-			filename=$filename_one
+			filename=$filename_one		# otherwise append _1
 		fi
-	else
-		filename=$filename_one
+	elif [ -e ~/$recbin/$filename ]
+	then
+		filename=$filename_one			# append _1
 	fi
 	# or increment suffix to append
-	if [ -e ~/$recbin/$filename ]
+	if [ -e ~/$recbin/$filename ]			# account for files that may already have the same filename_number name
 	then
-		while [ -e ~/$recbin/$filename ]
+		while [ -e ~/$recbin/$filename ]	# if this filename_number already exists, try filename_number+1
 		do
 			num="${filename##*_}" 		# get num
 			num=`expr $num + 1`		# increment num
@@ -55,18 +62,18 @@ delete () {
 			filename=$filename$num		# add new suffix
 		done
 
-		echo "smartdel: this file already exists, moved as '$filename'"
+		echo "smartdel: this file already exists in recycle bin, moved as '$filename'"
 	fi
 
 	# move file
-        log $filename
 	mv $1 ~/$recbin/$filename
+	log $filename
 }
 
 restore () {
 	# variables for concatenation
         filename=$1
-	path="~/$recbin/$filename*
+	path="~/$recbin/$filename*"
 	ast='*'
 	files=($path)
 	echo "${files[0]}"
@@ -78,16 +85,24 @@ restore () {
                         filename=$filename$var
                 done
 
-                echo "smartdel: this file already exists, but not to worry, moved with new name '$filename'"
+                echo "smartdel: this file already exists, moved as '$filename'"
                 mv ~/$recbin/$1 ~/$recbin/$filename
         fi
 
         # move file
-	mv ~/$rebin/$filename .
+	mv ~/$recbin/$filename .
 }
 
 o_restore () {
-	
+	# get the filename and path from our table and mv
+	path=$(grep "$1" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
+	mv ~/$recbin/$1 $path
+
+	# delete the entry from the table
+	string="$1 $path"
+	echo "STRING: "
+	echo  $string
+	sed -i 's@$string@d@' ~/$recbin/$table
 }
 
 # paramaterize the option, if it exists. Else, this loop will be skipped
@@ -100,7 +115,9 @@ do
                		d) delete $2 ;;
                		r) restore $2 ;;
 			o) o_restore $2 ;;
-               		\?) echo "invalid command: -$OPTARG" ;;
+               		\?) echo "invalid command: -$OPTARG" 
+			    exit # don't try to use invalid arguments
+			    ;;
        		esac
 		shift # shift down command vars by 1
 	done
