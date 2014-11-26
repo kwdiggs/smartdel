@@ -1,10 +1,15 @@
 #!/bin/bash
+# Keenan Diggs 2014
 
 recbin='smartdel_recycle'			# name of recycle bin
 table='.table.txt'				# name of recycle bin table
 under="_"                                       # underscore
 slash="/"                                       # forward slash
 one="_1"					# underscore 1
+parenth=")"					# closing parentheses
+ast="*"						# asterisk
+integer='^[0-9]+$' 	                  	# regex expression detecting integers
+
 
 # create recycle bin
 if [ ! -d ~/$recbin ]
@@ -35,15 +40,14 @@ log () {
 	fi
 }
 
-# ensure filename uniquness of the form name_versionNumber
+# ensure filename uniquness of the form: name_vNum
 ensure_unique () {
 	filename=$1					# human readable
 
         if [[ "$filename" =~ "$under" ]]                # if filename contain underscore
         then
                 num="${filename##*_}"                   # get number after final underscore
-                expression='^[0-9]+$'                   # regex expression detecting integers
-                if ! [[ $num =~ $expression ]]          # if integer follows underscore, formatting is correct
+                if ! [[ $num =~ $integer ]]	        # if integer follows underscore, formatting is correct
                 then
                         filename=$filename$one          # otherwise append _1
                 fi
@@ -53,7 +57,7 @@ ensure_unique () {
         fi
 
         # or increment suffix to append
-        if [ -e ~/$recbin/$filename ]                   # account for files in the bin of the format: duplicateName__number
+        if [ -e ~/$recbin/$filename ]                   # account for files in the bin of the format: duplicateName_number
         then
                 while [ -e ~/$recbin/$filename ]        # if this filename_number already exists, try filename_number+1
                 do
@@ -68,7 +72,7 @@ ensure_unique () {
 	echo "$filename"
 }
 
-# move files to recycle bin
+# move files to recycle bin, log in bin table the filename and the exact directory they were found in
 delete () {
 	filename=$1					# new filename to be used
 
@@ -91,9 +95,6 @@ delete () {
 	fi
 
 	filename=$(ensure_unique $filename)		# ensure filename is being stored uniquely in bin
-        echo "filepath: " $file_path
-        echo "filename: " $filename
-
 
 	# move and log in recycle bin table
 	if [ -n "$file_path" ]
@@ -114,14 +115,67 @@ clean_table () {
 
         sed -i "s@^$search_str@@" ~/$recbin/$table              		# replace the tuple with a blank line
         sed -i "/^$/d" ~/$recbin/$table                         		# remove blank lines from table
-	echo "$path"
+	echo $path								# return the path to caller
+}
+
+# helper method for wildcard support
+not_empty () {
+	[[ -e $1 ]]
 }
 
 # move files from recycle bin to current directory
 restore () {
         filename=$1						# human readable
-	path=$(clean_table $filename)				# clean bin table
-	mv ~/$recbin/$1 .					# move file
+	str=$filename$under$ast					# append _* for search string
+	declare -a array					# array to hold possible duplicates
+	count=0                                                 # count variable
+
+	# if original version exists, add it to the array
+	if [ -e ~/$recbin/$filename ]
+	then
+		array[$count]=~/$recbin/$filename		# store original in array
+		let "count=$count+1"				# increment counter
+	fi
+
+	# search for all subsquent versions, add to array
+	if not_empty ~/$recbin/$str
+	then
+		for f in `find ~/$recbin/$str`
+		do
+			array[$count]=$f				# store all versions into array
+			let "count=$count+1"				# increment counter
+		done
+	fi
+
+	# if more than one option exists, allow user to choose based on time last edited
+	if [ $count -gt "1" ]
+	then
+		echo "smartdel: more than one file with name $filename exists, please choose one based on time last edited"
+		count=0						# reset count
+		for version in "${array[@]}"			# iterate through all versions
+		do
+			time=$(stat -c%y $version)		# get time last edited
+			echo "$count$parenth $time"		# diplay as an option
+			let "count=$count+1"			# increment count
+		done
+
+		# user selects file to restore
+		read choice
+		if [[ $choice =~ $integer ]] && [ "${array[$choice]}" ] # user chooses a valid array index
+		then
+			mv "${array[$choice]}" .			# move file
+			path=$(clean_table $filename)			# clean bin table
+		else
+			echo "invalid input"				# display error message
+			exit						# terminate
+		fi
+	elif [ $count -eq "1" ]
+	then
+		mv "${array[0]}" . 	                        # move file
+                path=$(clean_table $filename)                   # clean bin table
+	else
+		echo "smartdel: file '$filename' not found in recycle bin"
+	fi
 }
 
 # move file from recycle bin to the directory they were removed from
@@ -139,7 +193,7 @@ do
 	do
 		case $opt in
                		d) delete $2 ;;				# smartdel -d
-               		r) restore "$2" ;;			# smartdel -r
+               		r) restore $2 ;;			# smartdel -r
 			o) o_restore $2 ;;			# smartdel -o
                		\?) echo "invalid command: -$OPTARG"	# display error message if argument is invalid
 			    exit  ;;				# don't proceed with invalid arguments
