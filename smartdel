@@ -165,7 +165,7 @@ restore () {
 		for version in "${array[@]}"			# iterate through all versions
 		do
 			time=$(stat -c%y $version)		# get time last edited
-			echo "$count$parenth $time"		# diplay as an option
+			echo "$count$parenth last edited:$time"		# diplay as an option
 
 			new_value="${array[$count]}"		# declare new_value
 			new_value="${new_value##*/}"		# assign the filename without path as new value
@@ -212,24 +212,24 @@ do
 	while [ -n "$2" ]					# in the case of wildcards, shift all filenames down to $2
 	do
 		case $opt in
-				# smartdel -d
+			# 	smartdel -d
                		d) 	delete $2 ;;
 
-				# smartdel -r, supports identical filenames
+			# 	smartdel -r, supports wildcards, supports identical filenames
                		r) 	if not_empty ~/$recbin/$2
 			   	then
 					for result in `find ~/$recbin/$2`
 				 	do
 						result="${result##*/}"
 						if [[ $result =~ $under ]]; then suffix="${result##*_}"; fi
-                                                if [[ ! $suffix =~ $integer ]]; then o_restore $result; fi
+                                                if [[ ! $suffix =~ $integer ]]; then restore $result; fi
 				 	done
 			   	else
-					echo "cannot restore"
+					echo "smartdel: cannot restore '$2'. No such file in recycle bin"
 			   	fi
 			   	;;
 
-				# smartdel -o, does not support identical filenames
+			# 	smartdel -o, supports wildcards, does not support identical filenames
 			o) 	if not_empty ~/$recbin/$2
 				then
 					for result in `find ~/$recbin/$2`
@@ -237,7 +237,7 @@ do
                                                 result="${result##*/}"
                                                 if [[ $result =~ $under ]]; then suffix="${result##*_}"; fi
                                                 if [[ ! $suffix =~ $integer ]]; then o_restore $result 
-						else echo "smartdel: cannot find '$2' in recycle bin "; fi
+						else echo "smartdel: cannot -o restore '$2'. No such file in recycle bin "; fi
                                         done
 				fi
 				;;
