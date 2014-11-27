@@ -44,30 +44,34 @@ log () {
 ensure_unique () {
 	filename=$1					# human readable
 
-        if [[ "$filename" =~ "$under" ]]                # if filename contain underscore
-        then
-                num="${filename##*_}"                   # get number after final underscore
-                if ! [[ $num =~ $integer ]]	        # if integer follows underscore, formatting is correct
-                then
-                        filename=$filename$one          # otherwise append _1
-                fi
-        elif [ -e ~/$recbin/$filename ]			# append _1 if no underscore in filename at all
-        then
-                filename=$filename$one                  # append _1
-        fi
+	# do the following modifications only if the filename already exists in the bin
+	if [ -e ~/$recbin/$filename ]
+	then
+        	if [[ "$filename" =~ "$under" ]]                # if filename contain underscore
+        	then
+                	num="${filename##*_}"                   # get text after final underscore
+                	if ! [[ $num =~ $integer ]]	        # do nothing if text is an integer, formatting is correct
+                	then
+                        	filename=$filename$one          # otherwise append _1
+                	fi
+        	elif [ -e ~/$recbin/$filename ]			# append _1 if no underscore in filename at all
+        	then
+                	filename=$filename$one                  # append _1
+        	fi
 
-        # or increment suffix to append
-        if [ -e ~/$recbin/$filename ]                   # account for files in the bin of the format: duplicateName_number
-        then
-                while [ -e ~/$recbin/$filename ]        # if this filename_number already exists, try filename_number+1
-                do
-                        num="${filename##*_}"           # get num
-                        num=`expr $num + 1`             # increment num
-                        num=$under$num                  # prepend underscore
-                        filename="${filename%_*}"       # remove old suffix
-                        filename=$filename$num          # add new suffix
-                done
-        fi
+       		# or increment suffix to append
+        	if [ -e ~/$recbin/$filename ]                   # account for files in the bin of the format: duplicateName_number
+        	then
+                	while [ -e ~/$recbin/$filename ]        # if this filename_number already exists, try filename_number+1
+                	do
+                        	num="${filename##*_}"           # get num
+                        	num=`expr $num + 1`             # increment num
+                        	num=$under$num                  # prepend underscore
+                        	filename="${filename%_*}"       # remove old suffix
+                        	filename=$filename$num          # add new suffix
+                	done
+        	fi
+	fi
 
 	echo "$filename"
 }
@@ -82,6 +86,7 @@ delete () {
 		echo "smartdel: cannot delete '$filename': no such file exists"
 		exit
 	fi
+
 	# if input is of the format: /path/to/filename; ~/dir/sub/filename; ../filename; ./filename; subdir/filename
 	# store the path and retrieve the filename
 	if [[ "$filename" =~ "$slash" ]]		# all paths contain slashes
@@ -133,6 +138,7 @@ restore () {
         filename=$1						# human readable
 	str=$filename$under$ast					# append _* for search string
 	declare -a array					# array to hold possible duplicates
+	declare -a array_2
 	count=0                                                 # count variable
 
 	# if original version exists, add it to the array
@@ -161,6 +167,10 @@ restore () {
 		do
 			time=$(stat -c%y $version)		# get time last edited
 			echo "$count$parenth $time"		# diplay as an option
+
+			new_value="${array[$count]}"		# declare new_value
+			new_value="${new_value##*/}"		# assign the filename without path as new value
+			array_2[$count]=$new_value		# put the new value into the array
 			let "count=$count+1"			# increment count
 		done
 
@@ -168,11 +178,10 @@ restore () {
 		read choice
 		if [[ $choice =~ $integer ]] && [ "${array[$choice]}" ] # user chooses a valid array index
 		then
-			new_name="${array[$choice]}"
-			new_name="${new_name##*_}"
-			new_name=$filename$under$newname
-			echo "new name" $new_name
-			path=$(clean_table $new_name)			# clean bin table
+			name="${array_2[$choice]}"                	# get the filename to be cleaned
+			path=$(clean_table $name)			# clean the table
+
+			# restore the file to the current directory
 			mv "${array[$choice]}" ./$filename              # file retains original name
 		else
 			echo "invalid input"				# display error message
@@ -180,12 +189,11 @@ restore () {
 		fi
 	elif [ $count -eq "1" ]
 	then
-		old_name="${filename##*_}"                      # file retains original name when restored
-		new_name="${array[0]}"
-		new_name="${new_name##*_}"
-		mv "${array[0]}" ./$old_name 	                # move file
-                path=$(clean_table $new_name)                   # clean bin table
-	else
+		name="${array[0]}"					# get filename to be restored
+		name="${name##*/}"					# trim filename
+		path=$(clean_table $name)				# clean the bin
+		mv "${array[0]}" ./$filename	 	                # move file
+        else
 		echo "smartdel: file '$filename' not found in recycle bin"
 	fi
 }
