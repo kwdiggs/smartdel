@@ -76,6 +76,12 @@ ensure_unique () {
 delete () {
 	filename=$1					# new filename to be used
 
+	# if user tries to delte nonexistant file, display error message and terminate
+	if [[ ! -e $filename ]]
+	then
+		echo "smartdel: cannot delete '$filename': no such file exists"
+		exit
+	fi
 	# if input is of the format: /path/to/filename; ~/dir/sub/filename; ../filename; ./filename; subdir/filename
 	# store the path and retrieve the filename
 	if [[ "$filename" =~ "$slash" ]]		# all paths contain slashes
@@ -91,7 +97,6 @@ delete () {
 		else
 			file_path=$PWD$slash$file_path$slash	# otherwise prepend pwd, e.g. pwd/subdirectory/filename; pwd/../filename; pwd/./filename
               	fi
-
 	fi
 
 	filename=$(ensure_unique $filename)		# ensure filename is being stored uniquely in bin
@@ -150,7 +155,7 @@ restore () {
 	# if more than one option exists, allow user to choose based on time last edited
 	if [ $count -gt "1" ]
 	then
-		echo "smartdel: more than one file with name $filename exists, please choose one based on time last edited"
+		echo "smartdel: cannot restore '$filename', multiple files of this name exist. Please choose one to restore based on time last edited"
 		count=0						# reset count
 		for version in "${array[@]}"			# iterate through all versions
 		do
@@ -163,16 +168,23 @@ restore () {
 		read choice
 		if [[ $choice =~ $integer ]] && [ "${array[$choice]}" ] # user chooses a valid array index
 		then
-			mv "${array[$choice]}" .			# move file
-			path=$(clean_table $filename)			# clean bin table
+			new_name="${array[$choice]}"
+			new_name="${new_name##*_}"
+			new_name=$filename$under$newname
+			echo "new name" $new_name
+			path=$(clean_table $new_name)			# clean bin table
+			mv "${array[$choice]}" ./$filename              # file retains original name
 		else
 			echo "invalid input"				# display error message
 			exit						# terminate
 		fi
 	elif [ $count -eq "1" ]
 	then
-		mv "${array[0]}" . 	                        # move file
-                path=$(clean_table $filename)                   # clean bin table
+		old_name="${filename##*_}"                      # file retains original name when restored
+		new_name="${array[0]}"
+		new_name="${new_name##*_}"
+		mv "${array[0]}" ./$old_name 	                # move file
+                path=$(clean_table $new_name)                   # clean bin table
 	else
 		echo "smartdel: file '$filename' not found in recycle bin"
 	fi
