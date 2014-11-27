@@ -72,7 +72,6 @@ ensure_unique () {
                 	done
         	fi
 	fi
-
 	echo "$filename"
 }
 
@@ -206,15 +205,43 @@ o_restore () {
 	mv ~/$recbin/$filename $path				# move the file to the destination
 }
 
+
 # paramaterize the option, if it exists. else, skip this loop
 while getopts ":d:r:o: " opt;
 do
 	while [ -n "$2" ]					# in the case of wildcards, shift all filenames down to $2
 	do
 		case $opt in
-               		d) delete $2 ;;				# smartdel -d
-               		r) restore $2 ;;			# smartdel -r
-			o) o_restore $2 ;;			# smartdel -o
+				# smartdel -d
+               		d) 	delete $2 ;;
+
+				# smartdel -r, supports identical filenames
+               		r) 	if not_empty ~/$recbin/$2
+			   	then
+					for result in `find ~/$recbin/$2`
+				 	do
+						result="${result##*/}"
+						if [[ $result =~ $under ]]; then suffix="${result##*_}"; fi
+                                                if [[ ! $suffix =~ $integer ]]; then o_restore $result; fi
+				 	done
+			   	else
+					echo "cannot restore"
+			   	fi
+			   	;;
+
+				# smartdel -o, does not support identical filenames
+			o) 	if not_empty ~/$recbin/$2
+				then
+					for result in `find ~/$recbin/$2`
+                                        do
+                                                result="${result##*/}"
+                                                if [[ $result =~ $under ]]; then suffix="${result##*_}"; fi
+                                                if [[ ! $suffix =~ $integer ]]; then o_restore $result 
+						else echo "smartdel: cannot find '$2' in recycle bin "; fi
+                                        done
+				fi
+				;;
+
                		\?) echo "invalid command: -$OPTARG"	# display error message if argument is invalid
 			    exit  ;;				# don't proceed with invalid arguments
        		esac
@@ -223,7 +250,7 @@ do
 	exit 							# don't do default delete, end here
 done
 
-# delete by default, same as smartdel -d
+# smartdel, same as smartdel -d
 while [ -n "$1" ]
 do
 	delete $1
