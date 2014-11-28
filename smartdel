@@ -29,12 +29,11 @@ then
 	cd $dir
 fi
 
-# log the tuple into the recycle bin table
+# log the 2-tuple into the recycle bin table
 log () {
-	# human readable variable name
 	tuple="$1 $2"
 
-	# concatenate to table if tuple is not already in table
+	# only if it doesn't already exist in the table
 	if ! grep -Fxq "$tuple" ~/$recbin/$table
 	then
 		echo "$tuple" >> ~/$recbin/$table
@@ -63,6 +62,28 @@ ensure_unique () {
 	echo "$filename"
 }
 
+# **if input is of the format: /home/path/filename; ~/path/filename; ../filename; ./filename; subdir/filename
+# ~then store the path and retrieve the filename**
+path_for_table () {
+        # all paths contain slashes
+        if [[ "$filename" =~ "$slash" ]]
+        then
+                # get the path and name of the file
+                file_path="${filename%/*}"
+                filename="${filename##*/}"
+
+                # if input begins with /, or ~, do not prepend $PWD; otherwise prepend $PWD
+                if [[ $filename == /* ]] || [[ $filename == ~* ]]
+                then
+                        file_path=$file_path$slash
+                else
+                        file_path=$PWD$slash$file_path$slash
+                fi
+        fi
+
+	echo "$file_path"
+}
+
 # move file to bin, log filename and path in table
 delete () {
 	# new filename to be used
@@ -75,26 +96,9 @@ delete () {
 		exit
 	fi
 
-	# if input is of the format: /home/path/filename; ~/path/filename; ../filename; ./filename; subdir/filename
-	# ~	then store the path and retrieve the filename
-	# all paths contain slashes
-	if [[ "$filename" =~ "$slash" ]]
-	then
-		# get the path and name of the file
-		file_path="${filename%/*}"
-		filename="${filename##*/}"
-
-		# if input begins with ~, or /, do not prepend PWD; otherwise prepend PWD
-		if [[ $filename == /* ]] || [[ $filename == ~* ]]
-        	then
-			file_path=$file_path$slash
-		else
-			file_path=$PWD$slash$file_path$slash
-              	fi
-	fi
-
-	# ensure filename is unique before moving to bin
+	# get 2-tuple for table
 	filename=$(ensure_unique $filename)
+	file_path=$(path_for_table $filename)
 
 	# move and log in recycle bin table
 	if [ -n "$file_path" ]
@@ -127,141 +131,242 @@ not_empty () {
 	[[ -f $1 ]]
 }
 
+# list option (smartdel -r)
+list_options () {
+	array=("${!1}")
+
+	echo "smartdel: multiple files with  name '$filename' exist. Please choose one to restore."
+        option="0"
+        for version in "${array[@]}"
+        do
+        	# get name and time last edited, display as an option
+                name="${version##*/}"
+                time=$(stat -c%y $version)
+                path=$(grep "$name" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
+                echo "$option$parenth last edited: $time | name: $name | source dir: $path"
+
+                # increment option
+                let "option=$option+1"
+        done
+}
+
+# move the item (smartdel -r)
+move_item () {
+	# user input to restore file
+        read choice
+	array=("${!1}")
+        declare -A used
+
+        if [[ $choice =~ $integer ]] && [ "${array[$choice]}" ] # user chooses a valid array index
+        then
+        	# get name currently in bin
+                name="${array[$choice]}"
+                cur_name="${name##*/}"
+                path=$(clean_table $cur_name)
+                name="${cur_name%_*}"
+
+                # restore the file to the current directory, retain original name
+                mv "${array[$choice]}" ./$name
+        else
+                echo "invalid input"
+                exit
+        fi
+}
+
 # move files from recycle bin to current directory
 restore () {
 	# human readable filename, searchstring, and array to hold paths/filename
-	echo "res: you gave me: " $1
-        filename=$1
-	str=$filename$under$ast
+	echo "res: you gave me: " "$1"
+        filename="$1"
+	if [[ "$filename" == *"*"* ]]; then str=$filename$ast; else str=$filename$under$ast; fi
 	declare -a array
+	declare -A paths
 	count="1"
-	skip=$2 # used by o_restore
 
-	# search for all versions of file, add to array
-	if not_empty ~/$recbin/$str
+	# for use in smartdel -o
+	skip="$2"
+	spec_path="$3"
+
+	echo '$1:' "$filename"
+	echo '$2:' "$skip"
+	echo '$3:' "$spec_path"
+
+
+	# smartdel -r
+	if [ ! "$skip" ]
 	then
-		for f in `find ~/$recbin/$str`
-		do
-			array[$count]=$f
-			let "count=$count+1"
-		done
-	else
+		# search for all versions of file, add to array
+		if not_empty ~/$recbin/$str
+		then
+			for f in `find ~/$recbin/$str`
+			do
+				array[$count]=$f
+				let "count=$count+1"
+			done
 		# display error message if no files could be found from user-generated search string
-                echo "smartdel: file '$filename' not found in recycle bin"
-	fi
+		else
+               		echo "1smartdel: file '$filename' not found in recycle bin"
+		fi
 
-	# if more than one option exists, allow user to choose based on time last edited
-	if [ $count -gt "2" ]
-	then
-		echo "smartdel: multiple files with  name '$filename' exist. Please choose one to restore based last edit time"
-		option="1"
-		for version in "${array[@]}"
-		do
-			# get name and time last edited, display as an option
-			name="${version##*/}"
-			time=$(stat -c%y $version)
-			echo "$option$parenth name: $name  last edited: $time"
+		# if more than one option exists, allow user to choose based on time last edited
+                if [ $count -gt "2" ]
+                then
+                        list_options array[@]
+                        move_item array[@]
 
-			# put filename without path into a filename array
-			new_value="${array[$option]}"
-			new_value="${new_value##*/}"
-
-			# increment option
-			let "option=$option+1"
-		done
-
-		# user input is file to restore
-		read choice
-		if [[ $choice =~ $integer ]] && [ "${array[$choice]}" ] # user chooses a valid array index
-		then
-			# clean bin table
-			name="${array[$choice]}"
-                	name="${name##*/}"
+                # only 1 file
+                elif [ $count -eq "2" ]
+                then
+                        # clean bin table
+                        name="${array[1]}"
+                        name="${name##*/}"
                         path=$(clean_table $name)
-			name="${name%_*}"
+                        name="${name%_*}"
 
+                        # move the file
+                        mv "${array[1]}" ./$name
+                fi
 
-			if [ ! "$skip" == "skip" ] # used by o_restore
-			then
-				# restore the file to the current directory, retain original name
-                        	mv "${array[$choice]}" ./$name
-			else
-				mv "${array[$choice]}" $path/$name
+	# smartdel -o
+	else
+		echo "O in use!"
+		echo "search string: " "~/$recbin/$str"
+
+		if not_empty ~/$recbin/$str
+        	then
+                	for f in `find ~/$recbin/$str`
+                	do
+				name="${f##*/}"
+				path=$(grep "$name" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
+				name="${name%_*}"
+
+				echo "BEFORE PATH"
+				echo "path is: " "$path"
+				if [ "$path" == "$3" ]
+				then
+					echo "AFTERMATH OF THE AFTERPATH"
+					array[$count]=$f
+                                	let "count=$count+1"
+				fi
+                	done
+
+			# if more than one option exists, allow user to choose based on time last edited
+                	if [ $count -gt "2" ]
+                	then
+				echo "-o MORE THAN 1"
+				# for each file, test directory, generate all files at that directory, else move on
+                        	list_options array[@]
+                        	move_item array[@]
+
+                	# only 1 file
+                	elif [ $count -eq "2" ]
+                	then
+				echo "-o ONLY 1 FILE!"
+                        	# clean bin table
+                        	name="${array[1]}"
+                        	name="${name##*/}"
+                        	path=$(clean_table $name)
+                        	name="${name%_*}"
+
+                        	# move the file
+                        	mv "${array[1]}" $path$name
 			fi
-		else
-			echo "invalid input"
-			exit
-		fi
-	# only 1 file
-	elif [ $count -eq "2" ]
-	then
-		# clean bin table
-		name="${array[1]}"
-		name="${name##*/}"
-		path=$(clean_table $name)
-		name="${name%_*}"
+        	# display error message if no files could be found from user-generated search string
+        	else
+                	echo "2smartdel: file '$filename' not found in recycle bin"
+        	fi
+	fi # end -r vs -o
 
-		if [ ! "$skip" == "skip" ] # used by o_restore
-		then
-			# move file
-                	mv "${array[1]}" ./$name
-		else
-			mv "${array[1]}" $path/$name
-		fi
-	fi
 }
 
-# move file from recycle bin to the directory they were removed from
-o_restore () {
-	filename=$1
-	skip="skip"
-	restore $filename $skip
+
+helper () {
+	result=$1
+	skip=$2
+
+	result="${result##*/}"
+        prefix="${result%_*}"
+        path=$(grep "$result" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
+
+        # smartdel -r a filename once
+        if [ ! "$skip" ]
+        then
+        	if [ ! "${array[$prefix]}" ]
+                then
+                	array[$prefix]="in use"
+                        restore $prefix
+                fi
+        # smartdel -o the filename once per directory
+        else
+        	if [ ! "${array[$path$prefix]}" ]
+                then
+                	array[$path$prefix]="combo in use"
+                        restore $prefix $skip "$path"
+                fi
+        fi
+}
+
+# put one at a time
+separate () {
+	value="$1"
+	skip="$2"
+	declare -A array
+
+	# with wildcard characters
+	if [[ "$value" == *"*"* ]] || [[ "$value" == *"?"* ]]
+       	then
+        	if [[ "$value" == *"?"* ]]; then value=$value$question$question; fi
+                if not_empty ~/$recbin/$value
+                then
+                        for result in `find ~/$recbin/$value`
+                       	do
+                                helper $result $skip
+                        done
+             	else
+                        echo "smartdel: cannot restore '$2'. No such file in recycle bin"
+                fi
+
+	# without wildcards
+        else
+		# smartdel -r
+		if [ ! "$skip" ]
+		then
+                	restore $1
+		# smartdel -o
+		else
+			if not_empty ~/$recbin/$value$under$ast; then
+				for result in `find ~/$recbin/$value$under$ast`
+				do
+					helper $result $skip
+				done
+			fi
+		fi
+        fi
 }
 
 # paramaterize the option, if it exists. else, skip this loop
 while getopts ":d:r:o: " opt;
 do
-	echo "this is 1" $2
-	while [ -n "$2" ]					# in the case of wildcards, shift all filenames down to $2
+	# if multiple parameters are passed in, shift all parameters down to $2
+	while [ -n "$2" ]
 	do
-		echo "this is 2" $2
 		case $opt in
-               		d) 	delete $2 ;;			# smartdel -d
-               		r) 	#if [[ $2 == *"*"* ]] && [[ $2 == *"?"* ]]
-				#then
-				#echo "it contains!"
-				#if not_empty ~/$recbin/$2
-				#then
-				#	echo "booyah!"
-				#	declare -a array
-				#	for result in `find ~/$recbin/$2`
-				#	do
-				#		# pass results in one by one, if the filename has already been used, skip
-				# restore the file to the current directory, retain original name
-                        	#		mv "${array[$choice]}" ./$filename
-				#		result="${result##*/}"
-				#		prefix="${result%*_}"
-				#		if [ ! "${array[$prefix]}" ]
-				#	        then
-				#			array[$prefix]="in use"
-				#			restore $result
-				#		fi
-                                #       	done
-			   	#else
-				#	echo "smartdel: cannot restore '$2'. No such file in recycle bin"
-			   	#fi
+			# smartdel -d, supports wildcards/identical names
+               		d) delete $2 ;;
 
-				#else
-					restore $2
-				#fi
-				;;
-			o) o_restore $2 ;; 		# smartdel -o, supports identical names, does not support wildcards
+			# smartdel -r, supports wildcards/identical names
+               		r) separate "$2" ;;
+
+			# smartdel -o, supports wildcards and identical names
+			o) separate "$2" "skip" ;;
+
+			# don't proceed with invalid arguments
                		\?) echo "invalid command: -$OPTARG"
-			    exit  ;;				# don't proceed with invalid arguments
+			    exit  ;;
        		esac
-		shift 						# shift down command variables by 1 index
+		shift
 	done
-	exit 							# don't do default delete, end here
+	exit
 done
 
 # smartdel with no options, same as smartdel -d
