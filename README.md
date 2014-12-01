@@ -65,9 +65,6 @@ smartdel -d ~/Documents/path/to/filename <br>
 smartdel -d subdir/grandchild/filename <br>
 smartdel -d filename1 filename2 filename3 <br><br>
 
-smartdel -f filename <br>
-smartdel -f path/with/whatever/variations/you/want/to/filename <br><br>
-
 smartdel -r filename1 <br>
 smartdel -r filename1 filename2 filename3 path/to/filename4 <br>
 smartdel -r 'filena*' <br>
