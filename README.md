@@ -64,17 +64,17 @@ The smart restore option allows the user to restore files from the smartdel_recy
 
 <h3>Examples</h3>
 smartdel is of the form: smartdel [option] [parameters] <br><br>
-smartdel -d filename, or equivalently: smartdel filename
+smartdel -d filename, or equivalently: smartdel filename <br>
 smartdel -d /home/path/to/filename <br>
-smartdel -d ../filename
+smartdel -d ../filename <br>
 smartdel -d ~/Documents/path/to/filename <br>
-smartdel -d subdir/grandchild/filename <br><br>
-smartdel -d filename1 filename2 filename3
+smartdel -d subdir/grandchild/filename <br>
+smartdel -d filename1 filename2 filename3 <br><br>
 
 smartdel -f filename <br>
 smartdel -f path/with/whatever/variations/you/want/to/filename <br><br>
 
-smartdel -r filename1
+smartdel -r filename1 <br>
 smartdel -r filename1 filename2 filename3 path/to/filename4 <br>
 smartdel -r 'filena*' <br>
 smartdel -r 'fil?name?' <br><br>
