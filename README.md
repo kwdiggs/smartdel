@@ -11,7 +11,7 @@ Documentation by Keenan Diggs, 2014
 *This bash script should be placed in user's bin folder for global execution.* <br>
 
 <p> 
-smartdel is a linux file-manipulation utility and extension of the mv command. The code is contained in a single shell script.
+smartdel is a linux file-manipulation utility and extension of the mv command. The code is contained in a single shell script. It is powerful and robust, capable of restoring all files in a recycle bin directory to the locations they were initially deleted from, while accounting for name collisions.
 </p>
 
 <p> 
@@ -44,12 +44,12 @@ Options: <br>
 
 <h3>-d</h3>
 <p>
-The delete option allows the user to send files, or file patterns if wildcards are used, from the specified directory to the recycle bin. The file is moved with a new name of the form oldfilename_version. If no option is specified and a paramenter is immediately input, smartdel behaves as though -d has been specified.
+The delete option allows the user to send files, or file patterns if wildcards are used, from the specified directory to the recycle bin. The file is moved with a new name of the form oldfilename_version. If no option is specified and a paramenter is immediately input, smartdel behaves as though -d has been specified. 'smartdel -d filename' is equivalent to 'smartdel filename'.
 </p>
 
 <h3>-f</h3>
 <p>
-The delete and forget option delete files of file patterns permanently. It is equivalent to calling 'rm filename'
+The delete and forget option delete files of file patterns permanently. 'smartdel -f filename' is equivalent to calling 'rm filename'
 </p>
 
 <h3>-r</h3>
