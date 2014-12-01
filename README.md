@@ -4,7 +4,7 @@ smartdel
 Created for COMP 4262-001 at the University of Memphis<br>
 Instructor: Dr. Zhou Lu <br>
 Project by Dr. Zhuo Lu <br>
-Code by Keenan Diggs, 2014
+Code by Keenan Diggs, 2014 <br>
 Documentation by Keenan Diggs, 2014
 
 <h2>Description</h2>
