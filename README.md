@@ -62,7 +62,7 @@ The restore option allows the user to restore files from the smartdel_recycle bi
 The smart restore option allows the user to restore files from the smartdel_recycle bin to the directory in which they were smartdeleted from. Wildcards are supported, but such patterns must be passed in with single or double quotes.
 </p>
 
-<h3>Examples</h3>
+<h2>Examples</h2>
 smartdel is of the form: smartdel [option] [parameters] <br><br>
 smartdel -d filename, or equivalently: smartdel filename <br>
 smartdel -d /home/path/to/filename <br>
