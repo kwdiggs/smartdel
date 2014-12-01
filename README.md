@@ -7,14 +7,16 @@ Instructor: Dr. Zhou Lu <br>
 Project by Dr. Zhuo Lu
 
 <h2>Description</h2>
-<p> smartdel is a linux file-tree utility and extension of the mv command. The code is contained entirely in one shell     script
+<p> smartdel is a linux file-manipulation utility and extension of the mv command. The code is contained entirely in one shell script
 </p>
 
 <h2>How to Use smartdel</h2>
 <Options: <br> 
 -d (delete) <br>
 -r (restore) <br>
-(option omitted, behavior is identical to -r) <br>
+-o (smart restore) <br>
+-f (delete and forget) <br>
+(option omitted, behavior is identical to -d) <br>
 
 
 <h3>move file(s) to recycle bin, supports wildcards</h3> 
