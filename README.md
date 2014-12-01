@@ -1,7 +1,7 @@
 smartdel
 ========
 
-Created for COMP 4262-001 at the University of Memphis<br>
+Created for COMP 4262-001 at the University of Memphis, Fall 2014<br>
 Instructor: Dr. Zhou Lu <br>
 Project by Dr. Zhuo Lu <br>
 Code by Keenan Diggs, 2014 <br>
