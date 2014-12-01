@@ -4,7 +4,8 @@ smartdel
 Created for COMP 4262-001 at the University of Memphis<br>
 Instructor: Dr. Zhou Lu <br>
 Project by Dr. Zhuo Lu <br>
-Code by Keenan Diggs 2014
+Code by Keenan Diggs, 2014
+Documentation by Keenan Diggs, 2014
 
 <h2>Description</h2>
 *This bash script should be placed in user's bin folder for global execution.* <br>
@@ -30,11 +31,11 @@ In addition, smartdel supports wilcard characters '*' and '?', but for restoring
 </p>
 
 <p>
-Finally, smartdel supports the deletion and restoration of identical filenames. If files with identical names are deleted from separate directories, smartdel can restore them simultaneously. However, if the same filename is deleted from the same directory 2 or more times, the user will decide which file to restore. In this event, smartdel will provide a numbered list of file descriptions, from which the uses chooses 1. The file descriptions contain the time last edited, filename_version as stored in the recycle bin, and directory from which the file was originally deleted from. Listing the original directory may seems useless, but it is useful when the user wants to restore a file to the present working directory only.
+Finally, smartdel supports the deletion and restoration of identical filenames. If files with identical names are deleted from separate directories, smartdel can restore them simultaneously. However, if the same filename is deleted from the same directory 2 or more times, the user will decide which version of the file to restore. In this event, smartdel will provide a numbered list of file descriptions, from which the uses chooses one. The file descriptions contain the time last edited, filename_version as stored in the recycle bin, and directory from which the file was originally deleted from.
 </p>
 
 <h2>How to Use smartdel</h2>
-Options:
+Options: <br>
 -d (delete) <br>
 -f (delete and forget) <br>
 -r (restore) <br>
@@ -43,28 +44,29 @@ Options:
 
 <h3>-d</h3>
 <p>
-The delete option allows the user to send files, or file patterns if wildcards are used, from the specified directory to the recycle bin. The file is moved with a new name of the form oldfilename_version. 
+The delete option allows the user to send files, or file patterns if wildcards are used, from the specified directory to the recycle bin. The file is moved with a new name of the form oldfilename_version. If no option is specified and a paramenter is immediately input, smartdel behaves as though -d has been specified.
 </p>
 
 <h3>-f</h3>
 <p>
-
+The delete and forget option delete files of file patterns permanently. It is equivalent to calling 'rm filename'
 </p>
 
 <h3>-r</h3>
 <p>
-
+The restore option allows the user to restore files from the smartdel_recycle bin to the present working directory. Wildcards are supported, but such patterns must be passed in with single or double quotes. If multiple files of the same filename have been deleted and are residing in the recycle bin, the user will have to specify which file to restore by inputting an integer from the keyboard and pressing Enter.
 </p>
 
 <h3>-o</h3>
 <p>
-
+The smart restore option allows the user to restore files from the smartdel_recycle bin to the directory in which they were smartdeleted from. Wildcards are supported, but such patterns must be passed in with single or double quotes.
 </p>
 
-<h3>Additional Examples</h3>
+<h3>Examples</h3>
 smartdel is of the form: smartdel [option] [parameters] <br><br>
 smartdel -d filename, or equivalently: smartdel filename
 smartdel -d /home/path/to/filename <br>
+smartdel -d ../filename
 smartdel -d ~/Documents/path/to/filename <br>
 smartdel -d subdir/grandchild/filename <br><br>
 smartdel -d filename1 filename2 filename3
@@ -81,8 +83,3 @@ smartdel -o filename1 <br>
 smartdel -o 'fi*name' <br>
 smartdel -o '?ilename2' <br>
 smartdel -o filename1 filename2 filename3
-
-
-
-
-
