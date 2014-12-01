@@ -30,11 +30,11 @@ In addition, smartdel supports wilcard characters '*' and '?', but for restoring
 </p>
 
 <p>
-Finally, smartdel supports the deletion of identical filenames. If files with identical names are deleted from separate directories, smartdel can restore them simultaneously. However, if the same filename is deleted from the same directory 2 or more times, the user will decide which file to restore. In this event, smartdel will provide a numbered list of file descriptions, from which the uses chooses 1. The file descriptions contain the time last edited, filename_version as stored in the recycle bin, and directory from which the file was originally deleted from. Listing the original directory is useful when the user wants to restore a file to the present working directory only.
+Finally, smartdel supports the deletion and restoration of identical filenames. If files with identical names are deleted from separate directories, smartdel can restore them simultaneously. However, if the same filename is deleted from the same directory 2 or more times, the user will decide which file to restore. In this event, smartdel will provide a numbered list of file descriptions, from which the uses chooses 1. The file descriptions contain the time last edited, filename_version as stored in the recycle bin, and directory from which the file was originally deleted from. Listing the original directory may seems useless, but it is useful when the user wants to restore a file to the present working directory only.
 </p>
 
 <h2>How to Use smartdel</h2>
-<Options: <br> 
+Options:
 -d (delete) <br>
 -f (delete and forget) <br>
 -r (restore) <br>
