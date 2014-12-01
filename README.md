@@ -5,7 +5,7 @@ Created for COMP 4262-001 at the University of Memphis<br>
 Instructor: Dr. Zhou Lu
 Project by Dr. Zhuo Lu
 
-This bash script should be placed in user's bin folder for global execution. <br>
+*This bash script should be placed in user's bin folder for global execution.* <br>
 
 <Options: <br> 
 -d (delete) <br>
