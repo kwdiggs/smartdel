@@ -42,9 +42,32 @@ Options:
 (option omitted, behavior is identical to -d) 
 
 <h3>-d</h3>
+<p>
+The delete option allows the user to send files, or file patterns if wildcards are used, by name from the specified directory to the recycle bin. The file is moved with a new name of the form oldfilename_version. 
+</P
 <h3>-f</h3>
 <h3>-r</h3>
 <h3>-o</h3>
+<h3>Examples</h3>
+smartdel is of the form: smartdel [option] [parameters] <br><br>
+smartdel -d filename, or equivalently: smartdel filename
+smartdel -d /home/path/to/filename <br>
+smartdel -d ~/Documents/path/to/filename <br>
+smartdel -d subdir/grandchild/filename <br><br>
+smartdel -d filename1 filename2 filename3
+
+smartdel -f filename <br>
+smartdel -f path/with/whatever/variations/you/want/to/filename <br><br>
+
+smartdel -r filename1
+smartdel -r filename1 filename2 filename3 path/to/filename4 <br>
+smartdel -r 'filena*' <br>
+smartdel -r 'fil?name?' <br><br>
+
+smartdel -o filename1 <br>
+smartdel -o 'fi*name' <br>
+smartdel -o '?ilename2' <br>
+smartdel -o filename1 filename2 filename3
 
 
 
