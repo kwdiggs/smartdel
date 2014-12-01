@@ -19,7 +19,7 @@ smartdel initializes a 'smartdel_recycle' recycle bin directory as a child of th
 </p>
 
 <p> 
-Upon file deletion, files are moved to the recycle bin and the filename and filepath 2-tuples are stored in the .table.txt file, where they can later be recovered and used. Unless the delete and forget option is used, in which case the file is deleted permanently. In the bin, files are stored in the format filename_version, where version is an integer.
+Upon file deletion, files are moved to the recycle bin and the filename and filepath 2-tuples are stored in the .table.txt file, where they can later be recovered and used. In the bin, files are stored in the format filename_version, where version is an integer.
 </p>
 
 <p> 
@@ -37,7 +37,6 @@ Finally, smartdel supports the deletion and restoration of identical filenames. 
 <h2>How to Use smartdel</h2>
 Options: <br>
 -d (delete) <br>
--f (delete and forget) <br>
 -r (restore) <br>
 -o (smart restore) <br>
 (option omitted, behavior is identical to -d) 
@@ -45,11 +44,6 @@ Options: <br>
 <h3>-d</h3>
 <p>
 The delete option allows the user to send files, or file patterns if wildcards are used, from the specified directory to the recycle bin. The file is moved with a new name of the form oldfilename_version. If no option is specified and a paramenter is immediately input, smartdel behaves as though -d has been specified. 'smartdel -d filename' is equivalent to 'smartdel filename'.
-</p>
-
-<h3>-f</h3>
-<p>
-The delete and forget option delete files of file patterns permanently. 'smartdel -f filename' is equivalent to calling 'rm filename'
 </p>
 
 <h3>-r</h3>
