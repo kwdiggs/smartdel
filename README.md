@@ -14,7 +14,7 @@ smartdel is a linux file-manipulation utility and extension of the mv command. T
 </p>
 
 <p> 
-smartdel initializes a 'smartdel_recycle' recycle bin directory as the user's home directory and a '.table.txt' file inside the bin.
+smartdel initializes a 'smartdel_recycle' recycle bin directory as a child of the user's home directory and a '.table.txt' file inside the bin.
 </p>
 
 <p> 
