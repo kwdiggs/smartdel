@@ -39,6 +39,8 @@ Options: <br>
 -d (delete) <br>
 -r (restore) <br>
 -o (smart restore) <br>
+-s (smart restore simultaneous files) <br>
+-c (permanently delete all files in recycle bin) <br>
 (option omitted, behavior is identical to -d) 
 
 <h3>-d</h3>
@@ -53,10 +55,27 @@ The restore option allows the user to restore files from the smartdel_recycle bi
 
 <h3>-o</h3>
 <p>
-The smart restore option allows the user to restore files from the smartdel_recycle bin to the directory in which they were smartdeleted from. Wildcards are supported, but such patterns must be passed in with single or double quotes.
+The restore option allows the user to restore files from the smartdel_recycle bin to the present working
+directory. Wildcards are supported, but such patterns must be passed in with single or double quotes. If
+multiple files of the same filename have been deleted and are residing in the recycle bin, the user will
+have to specify which file to restore by inputting an integer from the keyboard and pressing Enter based
+on a numbered list of file descriptions.
 </p>
 
-<h2>Examples</h2>
+<h3>-s</h3>
+<p>
+The smart restore (simultaneous) option allows the user to restore files from the smartdel_recycle bin to the directory in which they were smartdeleted from. If multiple files of the same name with different source
+directories are in the recycle bin, smartdel will restore them all simultaneously. Wildcard characters are
+supported, but such patterns must be passed in with single or double quotes.
+</p>
+
+<h3>-c</h3>
+<p>
+The clear bin option allows the user to permanently delete all files in the recycle bin and reset the table.
+It is invoked simply as 'smartdel -c'
+</p>
+
+<h2>Utility Call Examples</h2>
 smartdel is of the form: smartdel [option] [parameters] <br><br>
 smartdel -d filename, or equivalently: smartdel filename <br>
 smartdel -d /home/path/to/filename <br>
@@ -74,3 +93,8 @@ smartdel -o filename1 <br>
 smartdel -o 'fi*name' <br>
 smartdel -o '?ilename2' <br>
 smartdel -o filename1 filename2 filename3
+
+smartdel -s filename
+smartdel -s '*'
+
+smartdel -c
