@@ -89,37 +89,48 @@ path_for_table () {
 	echo "$file_path"
 }
 
+
 # >> called by getops()
 # move file to bin, log filename and path in table
 delete () {
 	# new filename to be used
 	filename="$1"
 
-	# if user tries to delete nonexistant file, display error message and terminate
-	if [[ ! -f "$filename" ]]  && [[ ! -d "$filename" ]]
+	# account for wildcards
+	if not_empty $filename
 	then
-		echo "smartdel: cannot delete '$filename': no such file exists"
-		return
-	# account for directories
-	elif [[ -d "$filename" ]]
-	then
-		echo "smartdel: cannot smartdel '$filename': it is a directory"
-		return
-	fi
+		for filename in `find $filename`
+		do
+			# if user tries to delete nonexistant file, display error message and terminate
+			if [ ! -f "$filename" ] && [ ! -d "$filename" ]
+			then
+				echo "smartdel: cannot delete '$filename': no such file exists"
+				return
+			# account for directories
+			elif [[ -d "$filename" ]]
+			then
+				echo "smartdel: cannot smartdel '$filename': it is a directory"
+				return
+			fi
 
-	# get 2-tuple for table
-	file_path=$(path_for_table "$filename")
-	filename="${filename##*/}"
-	filename=$(ensure_unique "$filename")
+			# get 2-tuple for table
+			file_path=$(path_for_table "$filename")
+			filename2="${filename##*/}"
+			filename2=$(ensure_unique "$filename2")
 
-	# move and log in recycle bin table
-	if [ -n "$file_path" ]
-	then
-		mv $1 ~/$recbin/"$filename"
-                log $filename $file_path
+			# move and log in recycle bin table
+			if [ -n "$file_path" ]
+			then
+				mv $filename ~/$recbin/"$filename2"
+                		log $filename2 $file_path
+			else
+				mv $filename ~/$recbin/"$filename2"
+                		log $filename2 $PWD$slash
+			fi
+
+		done
 	else
-		mv $1 ~/$recbin/"$filename"
-                log $filename $PWD$slash
+		echo "smartdel: '$filename' does not exist at this directory"
 	fi
 }
 
@@ -197,7 +208,7 @@ not_empty () {
         [[ -f $1 ]]
 }
 
-# >> called by helper()
+# >> called by separate()
 # move files from recycle bin to current directory, suppports -r and -o
 restore () {
 	# human readable variables, searchstring, and array to hold path/to/filename strings
@@ -353,7 +364,7 @@ do
 	do
 		case $opt in
 			# smartdel -d, supports wildcards/identical names
-               		d) delete $2 ;;
+               		d) delete "$2" ;;
 
 			# smartdel -r, supports wildcards/identical names
                		r) separate "$2" ;;
@@ -376,7 +387,7 @@ done
 # smartdel with no options, identical to smartdel -d
 while [ -n "$1" ]
 do
-	delete $1
+	delete "$1"
 	shift
 done
 
