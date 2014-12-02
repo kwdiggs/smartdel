@@ -7,7 +7,7 @@ Project by Dr. Zhuo Lu <br>
 Code by Keenan Diggs, 2014 <br>
 Documentation by Keenan Diggs, 2014
 
-<h2>Description</h2>
+<h2 style="text-align: center">Description</h2>
 *This bash script should be placed in user's bin folder for global execution.* <br>
 
 <p> 
