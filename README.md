@@ -94,7 +94,7 @@ smartdel -o 'fi*name' <br>
 smartdel -o '?ilename2' <br>
 smartdel -o filename1 filename2 filename3
 
-smartdel -s filename
+smartdel -s filename <br>
 smartdel -s '*'
 
 smartdel -c
