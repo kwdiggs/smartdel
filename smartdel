@@ -78,7 +78,7 @@ path_for_table () {
                 filename="${filename##*/}"
 
                 # if input begins with /, or ~, do not prepend $PWD; otherwise prepend $PWD
-                if [[ "$filename" == /* ]] || [[ "$filename" == ~* ]]
+                if [[ "$file_path" == /* ]] || [[ "$file_path" == ~* ]]
                 then
                         file_path=$file_path$slash
                 else
@@ -135,6 +135,7 @@ clean_table () {
         sed -i "s@^$search_str@@" ~/$recbin/$table
         sed -i "/^$/d" ~/$recbin/$table
 
+	path=$path$slash
 	echo "$path"
 }
 
@@ -161,6 +162,8 @@ list_options () {
 # >> helper of restore()
 # move the file from bin to appropriate filepath as stored in array
 move_item () {
+	skip="$2"
+
 	# user input to restore file
         read choice
 	array=("${!1}")
@@ -175,8 +178,13 @@ move_item () {
                 path=$(clean_table $cur_name)
                 name="${cur_name%_*}"
 
-                # restore the file to the current directory, recover the original name
-                mv "${array[$choice]}" ./$name
+		if [ ! "$skip" ]
+		then
+                	# restore the file to the current directory, recover the original name
+                	mv "${array[$choice]}" ./$name
+		else
+			mv "${array[choice]}" $path$slash$name
+		fi
         else
                 echo "invalid input"
                 exit
@@ -199,7 +207,7 @@ restore () {
 	declare -A paths
 	count="1"
 
-	# for use in smartdel -o
+	# for use in smartdel -s
 	skip="$2"
 	spec_path="$3"
 
@@ -208,19 +216,18 @@ restore () {
 	then
 		for f in `find ~/$recbin/$str`
 		do
-			# smartdel -r
-			if [ ! "$skip" ]
+			# smartdel -r, -o: filename used only once
+			if [ "$skip" != "skip" ] || [ "$skip" == "overlook" ]
 			then
 				array[$count]=$f
 				let "count=$count+1"
 
-			# smartdel -o
+			# smartdel -s: filename/pathname 2-tuple used only once
 			else
-				name="${f##*/}"
+                               	name="${f##*/}"
                                	path=$(grep "$name" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
-                               	name="${name%_*}"
 
-                               	if [ "$path" == "$3" ]
+                               	if [ "$path" == "$spec_path" ]
                                	then
                                        	array[$count]=$f
                                        	let "count=$count+1"
@@ -236,7 +243,7 @@ restore () {
         if [ $count -gt "2" ]
         then
         	list_options array[@]
-                move_item array[@]
+                move_item array[@] $skip
 
         # only 1 file
         elif [ $count -eq "2" ]
@@ -248,7 +255,7 @@ restore () {
                 name="${name%_*}"
 
                 # move the file
-		if [ ! "$skip" ]
+		if [ "$skip" != "skip" ] && [ "$skip" != "overlook" ]
 		then
                        	mv "${array[1]}" ./$name
 		else
@@ -257,37 +264,8 @@ restore () {
         fi
 }
 
-# >> helper of separate()
-# processes files to avoid name collisions
-# ~ allows the same filename to be restored to multiple distinct directories simultaneously
-helper () {
-	result=$1
-	skip=$2
-
-	result="${result##*/}"
-        prefix="${result%_*}"
-        path=$(grep "$result" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
-
-        # smartdel -r a filename once
-        if [ ! "$skip" ]
-        then
-        	if [ ! "${array[$prefix]}" ]
-                then
-                	array[$prefix]="in use"
-                        restore $prefix
-                fi
-        # smartdel -o the filename once per directory
-        else
-        	if [ ! "${array[$path$prefix]}" ]
-                then
-                	array[$path$prefix]="combo in use"
-                        restore $prefix $skip "$path"
-                fi
-        fi
-}
-
 # >> called by getopts()
-# ensure files are processed one at a time
+# expands wilcards, collect duplicates, pass files to restore()
 separate () {
 	value="$1"
 	skip="$2"
@@ -296,44 +274,80 @@ separate () {
 	# account for wildcard patterns when manipulating files
 	if [[ "$value" == *"*"* ]] || [[ "$value" == *"?"* ]]
        	then
-        	if [[ "$value" == *"?"* ]]; then value=$value$question$question; fi
+        	#if [[ "$value" == *"?"* ]]; then value=$value$under$ast; fi
+		value=$value$under$ast
                 if not_empty ~/$recbin/$value
                 then
                         for result in `find ~/$recbin/$value`
                        	do
-                                helper $result $skip
+                                result="${result##*/}"
+        			prefix="${result%_*}"
+        			path=$(grep "$result" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
+
+			        # smartdel -r, -o a filename once
+			        if [ ! "$skip"  ] || [ "$skip" == "overlook" ]
+			        then
+			                if [ ! "${array[$prefix]}" ]
+			                then
+			                        array[$prefix]="in use"
+			                        restore $prefix $skip $path
+			                fi
+			        # smartdel -s the filename once per directory
+			        else
+			                if [ ! "${array[$path$prefix]}" ]
+			                then
+			                        array[$path$prefix]="combo in use"
+			                        restore $prefix $skip "$path"
+			                fi
+        			fi
                         done
              	else
-                        echo "smartdel: cannot restore '$2'. No such file in recycle bin"
+                        echo "smartdel: cannot restore '$1'. No such file in recycle bin"
                 fi
 
 	# without wildcards
         else
-		# smartdel -r
-		if [ ! "$skip" ]
+		# smartdel -r, -o
+		if [ ! "$skip" ] || [ "$skip" == "overlook" ]
 		then
-                	restore $1
-		# smartdel -o
-		else
-			if not_empty ~/$recbin/$value$under$ast; then
-				for result in `find ~/$recbin/$value$under$ast`
-				do
-					helper $result $skip
-				done
-			fi
+                	restore "$1" "$skip"
+		# smartdel -s
+		elif not_empty ~/$recbin/$value$under$ast
+		then
+			for result in `find ~/$recbin/$value$under$ast`
+			do
+				result="${result##*/}"
+                                prefix="${result%_*}"
+                                path=$(grep "$result" ~/$recbin/$table | head -1 | cut -f 2 -d ' ')
+
+
+			        # smartdel -s the filename once per directory
+		                if [ ! "${array[$path$prefix]}" ]
+		                then
+                       			array[$path$prefix]="combo in use"
+		                        restore $prefix $skip "$path"
+               			fi
+			done
 		fi
         fi
 }
 
-# >> called by getopts()
-# permanently remove a file, do not store it in the bin
-remove_and_forget () {
-	rm "$1"
+# >> called by getops()
+# deletes contents of the recycle bin and table
+empty_bin () {
+	echo "" > ~/$recbin/$table
+	if not_empty ~/$recbin/$ast; then rm ~/$recbin/$ast; fi
 }
 
 # paramaterize the option if option was given. Else, skip this function
-while getopts ":d:r:o:f: " opt;
+while getopts ":d:r:o:s:c " opt;
 do
+	# smartdel -c, completely empties the recycle bin and clears the table
+	if [ "$opt" == "c" ]; then empty_bin; exit; fi
+
+	# ensure at lease 1 paramater has been passed in
+	if [ ! -n "$2" ]; then echo "smartdel: paramaters must be specified"; exit; fi
+
 	# if multiple parameters are passed in, process $2 and shift down
 	while [ -n "$2" ]
 	do
@@ -344,11 +358,11 @@ do
 			# smartdel -r, supports wildcards/identical names
                		r) separate "$2" ;;
 
-			# smartdel -o, supports wildcards and identical names
-			o) separate "$2" "skip" ;;
+			# smartdel -o, supports wildcards and identical names, single file restore
+			o) separate "$2" "overlook" ;;
 
-			# smartdel -f, permanently removes a file
-			f) remove_and_forget "$2" ;;
+			# smartdel -s, supports wildcards and identical names, multiple file restore
+			s) separate "$2" "skip" ;;
 
 			# don't proceed with invalid arguments
                		\?) echo "smartdel: invalid command '-$OPTARG'"
